@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "URL Highlighter",
+  "version": "0.1.0",
+  "description": "Destaca visualmente páginas com base em regras configuráveis de match contra a URL.",
+  "icons": {
+    "16": "icons/toolbar/16.png",
+    "32": "icons/toolbar/32.png",
+    "48": "icons/toolbar/48.png",
+    "128": "icons/toolbar/128.png"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "options_page": "options.html",
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": ["<all_urls>"],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content-script.js"],
+      "run_at": "document_start"
+    }
+  ]
+}

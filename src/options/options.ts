@@ -1,0 +1,6 @@
+const app = document.getElementById('app');
+if (app) {
+  app.textContent = 'Hello options (script ok)';
+}
+
+export {};

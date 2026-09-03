@@ -1,0 +1,23 @@
+{
+  "name": "url-highlighter",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Extensão de navegador (Chrome + Firefox) que destaca visualmente uma página com base em regras configuráveis de match contra a URL.",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build:chrome": "node scripts/build.mjs chrome",
+    "build:firefox": "node scripts/build.mjs firefox",
+    "build": "npm run build:chrome && npm run build:firefox",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "webextension-polyfill": "^0.12.0"
+  },
+  "devDependencies": {
+    "@types/webextension-polyfill": "^0.12.1",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.5.4"
+  }
+}
