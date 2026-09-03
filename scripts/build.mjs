@@ -44,7 +44,7 @@ const overrides =
     ? { background: { service_worker: 'background.js' } }
     : {
         background: { scripts: ['background.js'] },
-        browser_specific_settings: { gecko: { id: 'url-highlighter@beehus.com.br' } },
+        browser_specific_settings: { gecko: { id: 'url-highlighter@example.org' } },
       };
 
 const manifest = { ...template, ...overrides };
