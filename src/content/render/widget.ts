@@ -7,18 +7,19 @@ export interface WidgetOptions {
   message?: string;
   icon?: HighlightIcon;
   dismissible?: boolean;
+  position?: 'top' | 'bottom';
   ruleId: string;
 }
 
 export function renderWidget(
   shadow: ShadowRoot,
-  { color, message, icon, dismissible = true, ruleId }: WidgetOptions,
+  { color, message, icon, dismissible = true, position = 'bottom', ruleId }: WidgetOptions,
 ): void {
   let expanded = false;
 
   const badge = document.createElement('div');
   badge.style.position = 'fixed';
-  badge.style.bottom = '16px';
+  badge.style[position] = '16px';
   badge.style.right = '16px';
   badge.style.zIndex = '2147483647';
   badge.style.pointerEvents = 'auto';

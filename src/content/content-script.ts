@@ -8,8 +8,11 @@ import { renderWidget } from './render/widget';
 import { renderModal } from './render/modal';
 
 let currentShadow: ShadowRoot | null = null;
+let currentCleanup: (() => void) | null = null;
 
 function unmount(): void {
+  currentCleanup?.();
+  currentCleanup = null;
   currentShadow?.host.remove();
   currentShadow = null;
 }
@@ -17,7 +20,7 @@ function unmount(): void {
 function mountRule(rule: HighlightRule): void {
   const { type, color, message, icon, position, dismissible } = rule.highlight;
 
-  if ((type === 'widget' || type === 'modal') && isDismissed(rule.id)) {
+  if ((type === 'bar' || type === 'widget' || type === 'modal') && isDismissed(rule.id)) {
     return;
   }
 
@@ -26,13 +29,13 @@ function mountRule(rule: HighlightRule): void {
 
   switch (type) {
     case 'bar':
-      renderBar(shadow, { color, message, icon, position });
+      currentCleanup = renderBar(shadow, { color, message, icon, position, dismissible, ruleId: rule.id });
       break;
     case 'border':
       renderBorder(shadow, { color });
       break;
     case 'widget':
-      renderWidget(shadow, { color, message, icon, dismissible, ruleId: rule.id });
+      renderWidget(shadow, { color, message, icon, dismissible, position, ruleId: rule.id });
       break;
     case 'modal':
       renderModal(shadow, { color, message, icon, dismissible, ruleId: rule.id });
