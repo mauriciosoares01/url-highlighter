@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "URL Highlighter",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Destaca visualmente páginas com base em regras configuráveis de match contra a URL.",
   "icons": {
     "16": "icons/toolbar/16.png",
