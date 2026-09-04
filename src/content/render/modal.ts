@@ -1,12 +1,15 @@
+import type { HighlightIcon } from '../../shared/types';
 import { markDismissed } from './mount';
+import { createIconImg } from './icons';
 
 export interface ModalOptions {
   color: string;
   message?: string;
+  icon?: HighlightIcon;
   ruleId: string;
 }
 
-export function renderModal(shadow: ShadowRoot, { color, message, ruleId }: ModalOptions): void {
+export function renderModal(shadow: ShadowRoot, { color, message, icon, ruleId }: ModalOptions): void {
   const backdrop = document.createElement('div');
   backdrop.style.position = 'fixed';
   backdrop.style.inset = '0';
@@ -28,8 +31,15 @@ export function renderModal(shadow: ShadowRoot, { color, message, ruleId }: Moda
   box.style.textAlign = 'center';
 
   const text = document.createElement('div');
-  text.textContent = message ?? '';
   text.style.marginBottom = '16px';
+  text.style.display = 'flex';
+  text.style.alignItems = 'center';
+  text.style.justifyContent = 'center';
+  text.style.gap = '8px';
+  if (icon) {
+    text.appendChild(createIconImg(icon));
+  }
+  text.appendChild(document.createTextNode(message ?? ''));
 
   const closeButton = document.createElement('button');
   closeButton.textContent = 'Fechar';

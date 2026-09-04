@@ -1,12 +1,15 @@
+import type { HighlightIcon } from '../../shared/types';
 import { markDismissed } from './mount';
+import { createIconImg } from './icons';
 
 export interface WidgetOptions {
   color: string;
   message?: string;
+  icon?: HighlightIcon;
   ruleId: string;
 }
 
-export function renderWidget(shadow: ShadowRoot, { color, message, ruleId }: WidgetOptions): void {
+export function renderWidget(shadow: ShadowRoot, { color, message, icon, ruleId }: WidgetOptions): void {
   let expanded = false;
 
   const badge = document.createElement('div');
@@ -25,8 +28,14 @@ export function renderWidget(shadow: ShadowRoot, { color, message, ruleId }: Wid
   badge.style.maxWidth = '280px';
 
   const summary = document.createElement('div');
-  summary.textContent = '⚠';
   summary.style.fontWeight = 'bold';
+  summary.style.display = 'flex';
+  summary.style.alignItems = 'center';
+  summary.style.gap = '6px';
+  if (icon) {
+    summary.appendChild(createIconImg(icon));
+  }
+  summary.appendChild(document.createTextNode(icon ? '' : '⚠'));
 
   const full = document.createElement('div');
   full.textContent = message ?? '';

@@ -8,6 +8,7 @@ export function debugRenderAllTypes(): void {
   renderBar(createShadowHost('__uh-debug-bar'), {
     color: '#c0392b',
     message: 'AMBIENTE BAR',
+    icon: 'perigo',
     position: 'top',
   });
 
@@ -19,6 +20,7 @@ export function debugRenderAllTypes(): void {
     renderWidget(createShadowHost('__uh-debug-widget'), {
       color: '#2980b9',
       message: 'AMBIENTE WIDGET',
+      icon: 'informacao',
       ruleId: 'debug-widget',
     });
   }
@@ -27,6 +29,7 @@ export function debugRenderAllTypes(): void {
     renderModal(createShadowHost('__uh-debug-modal'), {
       color: '#e67e22',
       message: 'AMBIENTE MODAL',
+      icon: 'alerta',
       ruleId: 'debug-modal',
     });
   }

@@ -1,10 +1,14 @@
+import type { HighlightIcon } from '../../shared/types';
+import { createIconImg } from './icons';
+
 export interface BarOptions {
   color: string;
   message?: string;
+  icon?: HighlightIcon;
   position?: 'top' | 'bottom';
 }
 
-export function renderBar(shadow: ShadowRoot, { color, message, position = 'top' }: BarOptions): void {
+export function renderBar(shadow: ShadowRoot, { color, message, icon, position = 'top' }: BarOptions): void {
   const bar = document.createElement('div');
   bar.style.position = 'fixed';
   bar.style.left = '0';
@@ -17,7 +21,18 @@ export function renderBar(shadow: ShadowRoot, { color, message, position = 'top'
   bar.style.padding = '8px 16px';
   bar.style.font = '14px/1.4 system-ui, sans-serif';
   bar.style.textAlign = 'center';
-  bar.textContent = message ?? '';
+  bar.style.display = 'flex';
+  bar.style.alignItems = 'center';
+  bar.style.justifyContent = 'center';
+  bar.style.gap = '8px';
+
+  if (icon) {
+    bar.appendChild(createIconImg(icon));
+  }
+
+  const text = document.createElement('span');
+  text.textContent = message ?? '';
+  bar.appendChild(text);
 
   shadow.appendChild(bar);
 }
