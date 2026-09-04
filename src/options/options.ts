@@ -32,6 +32,10 @@ const dismissibleLabel = document.getElementById('field-dismissible-label') as H
 
 const rulesBody = document.getElementById('rules-tbody') as HTMLTableSectionElement;
 
+const exportButton = document.getElementById('export-btn') as HTMLButtonElement;
+const importButton = document.getElementById('import-btn') as HTMLButtonElement;
+const importFileInput = document.getElementById('import-file') as HTMLInputElement;
+
 let editingId: string | null = null;
 
 function updateFieldVisibility(type: HighlightRule['highlight']['type']): void {
@@ -242,6 +246,93 @@ form.addEventListener('submit', (event) => {
       showWarning('Este padrão casa com qualquer site.');
     }
   })();
+});
+
+function validateConfigShape(data: unknown): string | null {
+  if (typeof data !== 'object' || data === null) {
+    return 'Arquivo inválido: conteúdo não é um objeto JSON.';
+  }
+  const config = data as Record<string, unknown>;
+
+  if (typeof config.schemaVersion !== 'number') {
+    return 'Arquivo inválido: campo `schemaVersion` ausente ou malformado.';
+  }
+  if (typeof config.globalEnabled !== 'boolean') {
+    return 'Arquivo inválido: campo `globalEnabled` ausente ou malformado.';
+  }
+  if (!Array.isArray(config.rules)) {
+    return 'Arquivo inválido: campo `rules` ausente ou malformado.';
+  }
+
+  const rulesValid = config.rules.every((rule) => {
+    if (typeof rule !== 'object' || rule === null) return false;
+    const r = rule as Record<string, unknown>;
+    if (typeof r.id !== 'string' || typeof r.name !== 'string') return false;
+    if (typeof r.urlPattern !== 'string' || typeof r.priority !== 'number') return false;
+    if (typeof r.highlight !== 'object' || r.highlight === null) return false;
+    return typeof (r.highlight as Record<string, unknown>).type === 'string';
+  });
+  if (!rulesValid) {
+    return 'Arquivo inválido: uma ou mais regras em `rules` estão malformadas.';
+  }
+
+  return null;
+}
+
+exportButton.addEventListener('click', () => {
+  void (async () => {
+    const config = await getConfig();
+    const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'url-highlighter-config.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  })();
+});
+
+importButton.addEventListener('click', () => {
+  importFileInput.click();
+});
+
+importFileInput.addEventListener('change', () => {
+  const file = importFileInput.files?.[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    void (async () => {
+      clearMessages();
+
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(String(reader.result));
+      } catch {
+        showError('Arquivo inválido: não é um JSON válido.');
+        importFileInput.value = '';
+        return;
+      }
+
+      const shapeError = validateConfigShape(parsed);
+      if (shapeError) {
+        showError(shapeError);
+        importFileInput.value = '';
+        return;
+      }
+
+      const newConfig = parsed as ExtensionConfig;
+      const currentConfig = await getConfig();
+      const confirmed = confirm(
+        `Isso substituirá ${currentConfig.rules.length} regra(s) atual(is) por ${newConfig.rules.length} regra(s) importada(s). Continuar?`,
+      );
+      importFileInput.value = '';
+      if (!confirmed) return;
+
+      await setConfig(newConfig);
+    })();
+  };
+  reader.readAsText(file);
 });
 
 updateFieldVisibility(typeSelect.value as HighlightRule['highlight']['type']);
