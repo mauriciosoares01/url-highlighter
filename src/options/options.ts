@@ -245,5 +245,11 @@ form.addEventListener('submit', (event) => {
 });
 
 updateFieldVisibility(typeSelect.value as HighlightRule['highlight']['type']);
+
+const prefillPattern = new URLSearchParams(location.search).get('prefillPattern');
+if (prefillPattern) {
+  urlPatternInput.value = prefillPattern;
+}
+
 getConfig().then(renderRules);
 onConfigChanged(renderRules);
