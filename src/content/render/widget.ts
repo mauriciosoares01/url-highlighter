@@ -6,10 +6,14 @@ export interface WidgetOptions {
   color: string;
   message?: string;
   icon?: HighlightIcon;
+  dismissible?: boolean;
   ruleId: string;
 }
 
-export function renderWidget(shadow: ShadowRoot, { color, message, icon, ruleId }: WidgetOptions): void {
+export function renderWidget(
+  shadow: ShadowRoot,
+  { color, message, icon, dismissible = true, ruleId }: WidgetOptions,
+): void {
   let expanded = false;
 
   const badge = document.createElement('div');
@@ -42,32 +46,38 @@ export function renderWidget(shadow: ShadowRoot, { color, message, icon, ruleId 
   full.style.marginTop = '8px';
   full.style.display = 'none';
 
-  const closeButton = document.createElement('button');
-  closeButton.textContent = '×';
-  closeButton.style.position = 'absolute';
-  closeButton.style.top = '4px';
-  closeButton.style.right = '6px';
-  closeButton.style.background = 'transparent';
-  closeButton.style.border = 'none';
-  closeButton.style.color = '#fff';
-  closeButton.style.cursor = 'pointer';
-  closeButton.style.font = '16px/1 system-ui, sans-serif';
-  closeButton.style.display = 'none';
+  const closeButton = dismissible ? document.createElement('button') : null;
+  if (closeButton) {
+    closeButton.textContent = '×';
+    closeButton.style.position = 'absolute';
+    closeButton.style.top = '4px';
+    closeButton.style.right = '6px';
+    closeButton.style.background = 'transparent';
+    closeButton.style.border = 'none';
+    closeButton.style.color = '#fff';
+    closeButton.style.cursor = 'pointer';
+    closeButton.style.font = '16px/1 system-ui, sans-serif';
+    closeButton.style.display = 'none';
+  }
 
   const wrapper = document.createElement('div');
   wrapper.style.position = 'relative';
   wrapper.appendChild(summary);
   wrapper.appendChild(full);
-  wrapper.appendChild(closeButton);
+  if (closeButton) {
+    wrapper.appendChild(closeButton);
+  }
   badge.appendChild(wrapper);
 
   badge.addEventListener('click', () => {
     expanded = !expanded;
     full.style.display = expanded ? 'block' : 'none';
-    closeButton.style.display = expanded ? 'block' : 'none';
+    if (closeButton) {
+      closeButton.style.display = expanded ? 'block' : 'none';
+    }
   });
 
-  closeButton.addEventListener('click', (event) => {
+  closeButton?.addEventListener('click', (event) => {
     event.stopPropagation();
     markDismissed(ruleId);
     badge.remove();

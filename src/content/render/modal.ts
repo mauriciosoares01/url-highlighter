@@ -6,10 +6,14 @@ export interface ModalOptions {
   color: string;
   message?: string;
   icon?: HighlightIcon;
+  dismissible?: boolean;
   ruleId: string;
 }
 
-export function renderModal(shadow: ShadowRoot, { color, message, icon, ruleId }: ModalOptions): void {
+export function renderModal(
+  shadow: ShadowRoot,
+  { color, message, icon, dismissible = true, ruleId }: ModalOptions,
+): void {
   const backdrop = document.createElement('div');
   backdrop.style.position = 'fixed';
   backdrop.style.inset = '0';
@@ -41,23 +45,27 @@ export function renderModal(shadow: ShadowRoot, { color, message, icon, ruleId }
   }
   text.appendChild(document.createTextNode(message ?? ''));
 
-  const closeButton = document.createElement('button');
-  closeButton.textContent = 'Fechar';
-  closeButton.style.background = '#fff';
-  closeButton.style.color = '#000';
-  closeButton.style.border = 'none';
-  closeButton.style.borderRadius = '4px';
-  closeButton.style.padding = '8px 20px';
-  closeButton.style.cursor = 'pointer';
-  closeButton.style.font = '14px/1 system-ui, sans-serif';
-
-  closeButton.addEventListener('click', () => {
-    markDismissed(ruleId);
-    backdrop.remove();
-  });
-
   box.appendChild(text);
-  box.appendChild(closeButton);
+
+  if (dismissible) {
+    const closeButton = document.createElement('button');
+    closeButton.textContent = 'Fechar';
+    closeButton.style.background = '#fff';
+    closeButton.style.color = '#000';
+    closeButton.style.border = 'none';
+    closeButton.style.borderRadius = '4px';
+    closeButton.style.padding = '8px 20px';
+    closeButton.style.cursor = 'pointer';
+    closeButton.style.font = '14px/1 system-ui, sans-serif';
+
+    closeButton.addEventListener('click', () => {
+      markDismissed(ruleId);
+      backdrop.remove();
+    });
+
+    box.appendChild(closeButton);
+  }
+
   backdrop.appendChild(box);
   shadow.appendChild(backdrop);
 }
