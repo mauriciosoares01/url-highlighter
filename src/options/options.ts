@@ -41,8 +41,8 @@ let editingId: string | null = null;
 function updateFieldVisibility(type: HighlightRule['highlight']['type']): void {
   messageLabel.hidden = type === 'border';
   iconLabel.hidden = type === 'border';
-  positionLabel.hidden = type !== 'bar';
-  dismissibleLabel.hidden = type !== 'widget' && type !== 'modal';
+  positionLabel.hidden = type !== 'bar' && type !== 'widget';
+  dismissibleLabel.hidden = type === 'border';
 }
 
 function showError(text: string): void {
@@ -78,7 +78,7 @@ function startEdit(rule: HighlightRule): void {
   colorInput.value = rule.highlight.color;
   messageInput.value = rule.highlight.message ?? '';
   iconSelect.value = rule.highlight.icon ?? '';
-  positionSelect.value = rule.highlight.position ?? 'top';
+  positionSelect.value = rule.highlight.position ?? (rule.highlight.type === 'widget' ? 'bottom' : 'top');
   dismissibleCheckbox.checked = rule.highlight.dismissible ?? true;
   enabledCheckbox.checked = rule.enabled;
   updateFieldVisibility(rule.highlight.type);
@@ -89,9 +89,10 @@ function startEdit(rule: HighlightRule): void {
   clearMessages();
 }
 
-function button(label: string, onClick: () => void): HTMLButtonElement {
+function button(label: string, onClick: () => void, extraClass?: string): HTMLButtonElement {
   const el = document.createElement('button');
   el.type = 'button';
+  el.className = extraClass ? `icon-btn ${extraClass}` : 'icon-btn';
   el.textContent = label;
   el.addEventListener('click', onClick);
   return el;
@@ -100,6 +101,17 @@ function button(label: string, onClick: () => void): HTMLButtonElement {
 function renderRules(config: ExtensionConfig): void {
   const sorted = [...config.rules].sort((a, b) => a.priority - b.priority);
   rulesBody.innerHTML = '';
+
+  if (sorted.length === 0) {
+    const emptyRow = document.createElement('tr');
+    emptyRow.className = 'empty-state';
+    const emptyCell = document.createElement('td');
+    emptyCell.colSpan = 7;
+    emptyCell.textContent = 'Nenhuma regra cadastrada ainda.';
+    emptyRow.appendChild(emptyCell);
+    rulesBody.appendChild(emptyRow);
+    return;
+  }
 
   sorted.forEach((rule, index) => {
     const tr = document.createElement('tr');
@@ -132,12 +144,21 @@ function renderRules(config: ExtensionConfig): void {
     enabledTd.appendChild(enabledToggle);
 
     const actionsTd = document.createElement('td');
+    actionsTd.className = 'actions-cell';
     const upButton = button('↑', () => void moveRule(rule.id, 'up'));
     upButton.disabled = index === 0;
     const downButton = button('↓', () => void moveRule(rule.id, 'down'));
     downButton.disabled = index === sorted.length - 1;
     const editButton = button('Editar', () => startEdit(rule));
-    const deleteButton = button('Excluir', () => void deleteRule(rule.id));
+    const deleteButton = button(
+      'Excluir',
+      () => {
+        if (confirm(`Excluir a regra "${rule.name}"? Essa ação não pode ser desfeita.`)) {
+          void deleteRule(rule.id);
+        }
+      },
+      'danger',
+    );
     actionsTd.append(upButton, downButton, editButton, deleteButton);
 
     tr.append(nameTd, patternTd, typeTd, colorTd, priorityTd, enabledTd, actionsTd);
@@ -217,8 +238,8 @@ form.addEventListener('submit', (event) => {
     highlight.message = message;
     if (icon) highlight.icon = icon;
   }
-  if (type === 'bar') highlight.position = position;
-  if (type === 'widget' || type === 'modal') highlight.dismissible = dismissible;
+  if (type === 'bar' || type === 'widget') highlight.position = position;
+  if (type === 'bar' || type === 'widget' || type === 'modal') highlight.dismissible = dismissible;
 
   void (async () => {
     const config = await getConfig();
