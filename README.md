@@ -39,6 +39,3 @@ A extensão não sincroniza regras automaticamente entre pessoas ou navegadores 
 
 Decisão adotada para esta primeira versão: **distribuição interna via arquivo compartilhado** (`.zip` do Chrome / `.zip` ou `.xpi` do Firefox), não publicação nas lojas oficiais (Chrome Web Store / AMO). Publicação em loja fica em aberto como decisão administrativa futura, caso o uso extrapole o time.
 
-## Pendências conhecidas
-
-- Ícone da extensão na barra de ferramentas (`icons/toolbar/*.png`) ainda é um placeholder simples — arte final a definir.
