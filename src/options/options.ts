@@ -8,8 +8,36 @@ const TYPE_LABELS: Record<HighlightRule['highlight']['type'], string> = {
   modal: 'Modal',
 };
 
+const TYPE_COLORS: Record<HighlightRule['highlight']['type'], string> = {
+  bar: '#f59e0b',
+  border: '#10b981',
+  widget: '#8b5cf6',
+  modal: '#3b82f6',
+};
+
+const ICON_META: Record<HighlightIcon, { label: string; emoji: string }> = {
+  alerta: { label: 'Alerta', emoji: '⚠️' },
+  informacao: { label: 'Informação', emoji: 'ℹ️' },
+  nota: { label: 'Nota', emoji: '📝' },
+  perigo: { label: 'Perigo', emoji: '🚫' },
+  sucesso: { label: 'Sucesso', emoji: '✅' },
+};
+
+const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
+
+const themeToggle = document.getElementById('theme-toggle') as HTMLButtonElement;
+
+const rulesCount = document.getElementById('rules-count') as HTMLSpanElement;
+const rulesColumns = document.getElementById('rules-columns') as HTMLDivElement;
+const rulesList = document.getElementById('rules-list') as HTMLDivElement;
+const rulesEmpty = document.getElementById('rules-empty') as HTMLDivElement;
+
+const exportButton = document.getElementById('export-btn') as HTMLButtonElement;
+const importFileInput = document.getElementById('import-file') as HTMLInputElement;
+
 const form = document.getElementById('rule-form') as HTMLFormElement;
 const formTitle = document.getElementById('form-title') as HTMLHeadingElement;
+const formSubtitle = document.getElementById('form-subtitle') as HTMLParagraphElement;
 const formSubmit = document.getElementById('form-submit') as HTMLButtonElement;
 const formCancel = document.getElementById('form-cancel') as HTMLButtonElement;
 const formError = document.getElementById('form-error') as HTMLDivElement;
@@ -19,31 +47,78 @@ const nameInput = document.getElementById('field-name') as HTMLInputElement;
 const urlPatternInput = document.getElementById('field-url-pattern') as HTMLInputElement;
 const typeSelect = document.getElementById('field-type') as HTMLSelectElement;
 const colorInput = document.getElementById('field-color') as HTMLInputElement;
+const colorHexInput = document.getElementById('field-color-hex') as HTMLInputElement;
 const messageInput = document.getElementById('field-message') as HTMLTextAreaElement;
 const iconSelect = document.getElementById('field-icon') as HTMLSelectElement;
-const positionSelect = document.getElementById('field-position') as HTMLSelectElement;
+const positionGroup = document.getElementById('field-position') as HTMLDivElement;
+const positionButtons = Array.from(positionGroup.querySelectorAll<HTMLButtonElement>('.segmented-option'));
 const dismissibleCheckbox = document.getElementById('field-dismissible') as HTMLInputElement;
 const enabledCheckbox = document.getElementById('field-enabled') as HTMLInputElement;
 
-const messageLabel = document.getElementById('field-message-label') as HTMLLabelElement;
-const iconLabel = document.getElementById('field-icon-label') as HTMLLabelElement;
-const positionLabel = document.getElementById('field-position-label') as HTMLLabelElement;
-const dismissibleLabel = document.getElementById('field-dismissible-label') as HTMLLabelElement;
+const messageGroup = document.getElementById('field-message-group') as HTMLDivElement;
+const iconGroup = document.getElementById('field-icon-group') as HTMLDivElement;
+const positionFieldGroup = document.getElementById('field-position-group') as HTMLDivElement;
+const dismissibleGroup = document.getElementById('field-dismissible-group') as HTMLLabelElement;
 
-const rulesBody = document.getElementById('rules-tbody') as HTMLTableSectionElement;
-
-const exportButton = document.getElementById('export-btn') as HTMLButtonElement;
-const importButton = document.getElementById('import-btn') as HTMLButtonElement;
-const importFileInput = document.getElementById('import-file') as HTMLInputElement;
+const deleteModal = document.getElementById('delete-modal') as HTMLDivElement;
+const deleteModalText = document.getElementById('delete-modal-text') as HTMLParagraphElement;
+const deleteCancelButton = document.getElementById('delete-cancel') as HTMLButtonElement;
+const deleteConfirmButton = document.getElementById('delete-confirm') as HTMLButtonElement;
 
 let editingId: string | null = null;
+let selectedPosition: 'top' | 'bottom' = 'top';
+let pendingDeleteId: string | null = null;
+
+function applyTheme(theme: 'light' | 'dark'): void {
+  document.documentElement.classList.toggle('dark', theme === 'dark');
+  themeToggle.textContent = theme === 'dark' ? '☀' : '☾';
+  themeToggle.title = theme === 'dark' ? 'Modo claro' : 'Modo escuro';
+  localStorage.setItem('uh_theme', theme);
+}
+
+function initTheme(): void {
+  const stored = localStorage.getItem('uh_theme');
+  if (stored === 'light' || stored === 'dark') {
+    applyTheme(stored);
+    return;
+  }
+  applyTheme(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+}
+
+themeToggle.addEventListener('click', () => {
+  applyTheme(document.documentElement.classList.contains('dark') ? 'light' : 'dark');
+});
 
 function updateFieldVisibility(type: HighlightRule['highlight']['type']): void {
-  messageLabel.hidden = type === 'border';
-  iconLabel.hidden = type === 'border';
-  positionLabel.hidden = type !== 'bar' && type !== 'widget';
-  dismissibleLabel.hidden = type === 'border';
+  messageGroup.hidden = type === 'border';
+  iconGroup.hidden = type === 'border';
+  positionFieldGroup.hidden = type !== 'bar' && type !== 'widget';
+  dismissibleGroup.hidden = type === 'border';
 }
+
+function setPosition(value: 'top' | 'bottom'): void {
+  selectedPosition = value;
+  positionButtons.forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.value === value);
+  });
+}
+
+positionButtons.forEach((btn) => {
+  btn.addEventListener('click', () => {
+    setPosition(btn.dataset.value === 'bottom' ? 'bottom' : 'top');
+  });
+});
+
+colorInput.addEventListener('input', () => {
+  colorHexInput.value = colorInput.value;
+});
+
+colorHexInput.addEventListener('input', () => {
+  const value = colorHexInput.value.trim();
+  if (HEX_COLOR_RE.test(value)) {
+    colorInput.value = value;
+  }
+});
 
 function showError(text: string): void {
   formError.textContent = text;
@@ -64,10 +139,14 @@ function resetForm(): void {
   form.reset();
   editingId = null;
   formTitle.textContent = 'Nova regra';
+  formSubtitle.textContent = 'Preencha os campos para adicionar uma regra';
   formSubmit.textContent = 'Salvar';
   formCancel.hidden = true;
-  colorInput.value = '#e53e3e';
+  colorInput.value = '#3b82f6';
+  colorHexInput.value = '#3b82f6';
+  setPosition('top');
   updateFieldVisibility(typeSelect.value as HighlightRule['highlight']['type']);
+  clearMessages();
 }
 
 function startEdit(rule: HighlightRule): void {
@@ -76,23 +155,58 @@ function startEdit(rule: HighlightRule): void {
   urlPatternInput.value = rule.urlPattern;
   typeSelect.value = rule.highlight.type;
   colorInput.value = rule.highlight.color;
+  colorHexInput.value = rule.highlight.color;
   messageInput.value = rule.highlight.message ?? '';
   iconSelect.value = rule.highlight.icon ?? '';
-  positionSelect.value = rule.highlight.position ?? (rule.highlight.type === 'widget' ? 'bottom' : 'top');
+  setPosition(rule.highlight.position ?? (rule.highlight.type === 'widget' ? 'bottom' : 'top'));
   dismissibleCheckbox.checked = rule.highlight.dismissible ?? true;
   enabledCheckbox.checked = rule.enabled;
   updateFieldVisibility(rule.highlight.type);
 
-  formTitle.textContent = `Editar regra — ${rule.name}`;
+  formTitle.textContent = 'Editar regra';
+  formSubtitle.textContent = `Editando: ${rule.name}`;
   formSubmit.textContent = 'Salvar alterações';
   formCancel.hidden = false;
   clearMessages();
 }
 
-function button(label: string, onClick: () => void, extraClass?: string): HTMLButtonElement {
+function hexToRgb(hex: string): { r: number; g: number; b: number } {
+  return {
+    r: parseInt(hex.slice(1, 3), 16),
+    g: parseInt(hex.slice(3, 5), 16),
+    b: parseInt(hex.slice(5, 7), 16),
+  };
+}
+
+function contrastColor(hex: string): string {
+  const { r, g, b } = hexToRgb(hex);
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.55 ? '#111827' : '#ffffff';
+}
+
+function createToggle(checked: boolean, onChange: (checked: boolean) => void): HTMLButtonElement {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = checked ? 'toggle-switch checked' : 'toggle-switch';
+  btn.setAttribute('role', 'switch');
+  btn.setAttribute('aria-checked', String(checked));
+  const knob = document.createElement('span');
+  knob.className = 'toggle-knob';
+  btn.appendChild(knob);
+  btn.addEventListener('click', () => {
+    const next = !btn.classList.contains('checked');
+    btn.classList.toggle('checked', next);
+    btn.setAttribute('aria-checked', String(next));
+    onChange(next);
+  });
+  return btn;
+}
+
+function iconButton(label: string, title: string, onClick: () => void, extraClass?: string): HTMLButtonElement {
   const el = document.createElement('button');
   el.type = 'button';
-  el.className = extraClass ? `icon-btn ${extraClass}` : 'icon-btn';
+  el.className = extraClass ? `btn-icon ${extraClass}` : 'btn-icon';
+  el.title = title;
   el.textContent = label;
   el.addEventListener('click', onClick);
   return el;
@@ -100,71 +214,123 @@ function button(label: string, onClick: () => void, extraClass?: string): HTMLBu
 
 function renderRules(config: ExtensionConfig): void {
   const sorted = [...config.rules].sort((a, b) => a.priority - b.priority);
-  rulesBody.innerHTML = '';
+  rulesList.innerHTML = '';
 
-  if (sorted.length === 0) {
-    const emptyRow = document.createElement('tr');
-    emptyRow.className = 'empty-state';
-    const emptyCell = document.createElement('td');
-    emptyCell.colSpan = 7;
-    emptyCell.textContent = 'Nenhuma regra cadastrada ainda.';
-    emptyRow.appendChild(emptyCell);
-    rulesBody.appendChild(emptyRow);
-    return;
-  }
+  rulesCount.hidden = sorted.length === 0;
+  rulesCount.textContent = String(sorted.length);
+  rulesColumns.hidden = sorted.length === 0;
+  rulesEmpty.hidden = sorted.length > 0;
 
   sorted.forEach((rule, index) => {
-    const tr = document.createElement('tr');
+    const row = document.createElement('div');
+    row.className = 'rule-row rule-row-data';
+    if (rule.id === editingId) row.classList.add('editing');
+    if (!rule.enabled) row.classList.add('disabled');
 
-    const nameTd = document.createElement('td');
-    nameTd.textContent = rule.name;
+    const nameCell = document.createElement('div');
+    const nameText = document.createElement('div');
+    nameText.className = 'rule-name';
+    nameText.textContent = rule.name;
+    nameCell.appendChild(nameText);
 
-    const patternTd = document.createElement('td');
-    patternTd.textContent = rule.urlPattern;
+    const iconMeta = rule.highlight.icon ? ICON_META[rule.highlight.icon] : null;
+    const showsPosition = rule.highlight.type === 'bar' || rule.highlight.type === 'widget';
+    if (iconMeta || showsPosition) {
+      const meta = document.createElement('div');
+      meta.className = 'rule-name-meta';
+      if (iconMeta) {
+        const iconSpan = document.createElement('span');
+        iconSpan.title = iconMeta.label;
+        iconSpan.textContent = iconMeta.emoji;
+        meta.appendChild(iconSpan);
+      }
+      if (showsPosition) {
+        const posSpan = document.createElement('span');
+        posSpan.textContent = rule.highlight.position === 'bottom' ? '↓' : '↑';
+        meta.appendChild(posSpan);
+      }
+      nameCell.appendChild(meta);
+    }
 
-    const typeTd = document.createElement('td');
-    typeTd.textContent = TYPE_LABELS[rule.highlight.type];
+    const patternCell = document.createElement('div');
+    const patternCode = document.createElement('code');
+    patternCode.className = 'rule-pattern';
+    patternCode.textContent = rule.urlPattern;
+    patternCell.appendChild(patternCode);
 
-    const colorTd = document.createElement('td');
+    const typeCell = document.createElement('div');
+    const typeBadge = document.createElement('span');
+    typeBadge.className = 'type-badge';
+    typeBadge.style.background = TYPE_COLORS[rule.highlight.type];
+    typeBadge.style.color = contrastColor(TYPE_COLORS[rule.highlight.type]);
+    typeBadge.textContent = TYPE_LABELS[rule.highlight.type];
+    typeCell.appendChild(typeBadge);
+
+    const colorCell = document.createElement('div');
     const swatch = document.createElement('span');
     swatch.className = 'color-swatch';
     swatch.style.background = rule.highlight.color;
-    colorTd.appendChild(swatch);
+    swatch.title = rule.highlight.color;
+    colorCell.appendChild(swatch);
 
-    const priorityTd = document.createElement('td');
-    priorityTd.textContent = String(rule.priority);
+    const priorityCell = document.createElement('div');
+    priorityCell.className = 'priority-value';
+    priorityCell.textContent = `#${rule.priority}`;
 
-    const enabledTd = document.createElement('td');
-    const enabledToggle = document.createElement('input');
-    enabledToggle.type = 'checkbox';
-    enabledToggle.checked = rule.enabled;
-    enabledToggle.addEventListener('change', () => {
-      void toggleEnabled(rule.id, enabledToggle.checked);
-    });
-    enabledTd.appendChild(enabledToggle);
+    const enabledCell = document.createElement('div');
+    enabledCell.appendChild(createToggle(rule.enabled, (checked) => void toggleEnabled(rule.id, checked)));
 
-    const actionsTd = document.createElement('td');
-    actionsTd.className = 'actions-cell';
-    const upButton = button('↑', () => void moveRule(rule.id, 'up'));
+    const orderCell = document.createElement('div');
+    orderCell.className = 'action-group';
+    const upButton = iconButton('↑', 'Aumentar prioridade', () => void moveRule(rule.id, 'up'));
     upButton.disabled = index === 0;
-    const downButton = button('↓', () => void moveRule(rule.id, 'down'));
+    const downButton = iconButton('↓', 'Diminuir prioridade', () => void moveRule(rule.id, 'down'));
     downButton.disabled = index === sorted.length - 1;
-    const editButton = button('Editar', () => startEdit(rule));
-    const deleteButton = button(
-      'Excluir',
-      () => {
-        if (confirm(`Excluir a regra "${rule.name}"? Essa ação não pode ser desfeita.`)) {
-          void deleteRule(rule.id);
-        }
-      },
-      'danger',
-    );
-    actionsTd.append(upButton, downButton, editButton, deleteButton);
+    orderCell.append(upButton, downButton);
 
-    tr.append(nameTd, patternTd, typeTd, colorTd, priorityTd, enabledTd, actionsTd);
-    rulesBody.appendChild(tr);
+    const actionsCell = document.createElement('div');
+    actionsCell.className = 'action-group';
+    const editButton = iconButton('✎', 'Editar', () => startEdit(rule));
+    const deleteButton = iconButton('✕', 'Excluir', () => openDeleteModal(rule.id, rule.name), 'danger');
+    actionsCell.append(editButton, deleteButton);
+
+    row.append(nameCell, patternCell, typeCell, colorCell, priorityCell, enabledCell, orderCell, actionsCell);
+    rulesList.appendChild(row);
   });
 }
+
+function openDeleteModal(id: string, name: string): void {
+  pendingDeleteId = id;
+  deleteModalText.textContent = '';
+  deleteModalText.append(
+    document.createTextNode('Tem certeza que deseja excluir '),
+    Object.assign(document.createElement('strong'), { textContent: `"${name}"` }),
+    document.createTextNode('? Esta ação não pode ser desfeita.'),
+  );
+  deleteModal.hidden = false;
+}
+
+function closeDeleteModal(): void {
+  pendingDeleteId = null;
+  deleteModal.hidden = true;
+}
+
+deleteCancelButton.addEventListener('click', closeDeleteModal);
+
+deleteConfirmButton.addEventListener('click', () => {
+  if (pendingDeleteId) {
+    void deleteRule(pendingDeleteId);
+  }
+  closeDeleteModal();
+});
+
+deleteModal.addEventListener('click', (event) => {
+  if (event.target === deleteModal) closeDeleteModal();
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && !deleteModal.hidden) closeDeleteModal();
+});
 
 async function toggleEnabled(id: string, enabled: boolean): Promise<void> {
   const config = await getConfig();
@@ -216,16 +382,15 @@ form.addEventListener('submit', (event) => {
   const color = colorInput.value;
   const message = messageInput.value.trim();
   const icon = iconSelect.value as HighlightIcon | '';
-  const position = positionSelect.value as 'top' | 'bottom';
   const dismissible = dismissibleCheckbox.checked;
   const enabled = enabledCheckbox.checked;
 
   if (!name) {
-    showError('Nome é obrigatório.');
+    showError('O nome é obrigatório.');
     return;
   }
   if (!urlPattern) {
-    showError('Padrão de URL é obrigatório.');
+    showError('O padrão de URL é obrigatório.');
     return;
   }
   if ((type === 'bar' || type === 'widget' || type === 'modal') && !message) {
@@ -238,7 +403,7 @@ form.addEventListener('submit', (event) => {
     highlight.message = message;
     if (icon) highlight.icon = icon;
   }
-  if (type === 'bar' || type === 'widget') highlight.position = position;
+  if (type === 'bar' || type === 'widget') highlight.position = selectedPosition;
   if (type === 'bar' || type === 'widget' || type === 'modal') highlight.dismissible = dismissible;
 
   void (async () => {
@@ -264,7 +429,7 @@ form.addEventListener('submit', (event) => {
 
     resetForm();
     if (urlPattern === '*') {
-      showWarning('Este padrão casa com qualquer site.');
+      showWarning("O padrão '*' é genérico demais e vai corresponder a qualquer URL.");
     }
   })();
 });
@@ -313,10 +478,6 @@ exportButton.addEventListener('click', () => {
   })();
 });
 
-importButton.addEventListener('click', () => {
-  importFileInput.click();
-});
-
 importFileInput.addEventListener('change', () => {
   const file = importFileInput.files?.[0];
   if (!file) return;
@@ -356,6 +517,8 @@ importFileInput.addEventListener('change', () => {
   reader.readAsText(file);
 });
 
+initTheme();
+setPosition('top');
 updateFieldVisibility(typeSelect.value as HighlightRule['highlight']['type']);
 
 const prefillPattern = new URLSearchParams(location.search).get('prefillPattern');

@@ -8,113 +8,171 @@
   <body>
     <div id="app">
       <header class="app-header">
-        <h1>URL Highlighter</h1>
-        <p class="app-subtitle">Regras de destaque visual por padrão de URL</p>
+        <div class="app-header-brand">
+          <div class="app-logo">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <rect x="1" y="3" width="14" height="2" rx="1" fill="white" opacity="0.5" />
+              <rect x="1" y="7" width="10" height="6" rx="1" fill="white" />
+              <rect x="12" y="7" width="3" height="6" rx="1" fill="white" opacity="0.7" />
+            </svg>
+          </div>
+          <div>
+            <h1>URL Highlighter</h1>
+            <p class="app-subtitle">Regras de destaque visual por padrão de URL</p>
+          </div>
+        </div>
+        <button type="button" id="theme-toggle" class="btn-icon" title="Alternar tema">☾</button>
       </header>
 
       <div class="layout">
         <section class="panel rules-panel">
           <div class="panel-header">
-            <h2>Regras</h2>
+            <div class="panel-header-title">
+              <h2>Regras</h2>
+              <span id="rules-count" class="count-badge" hidden>0</span>
+            </div>
             <div class="backup-actions">
-              <button type="button" id="export-btn" class="btn btn-secondary">Exportar</button>
-              <button type="button" id="import-btn" class="btn btn-secondary">Importar</button>
-              <input type="file" id="import-file" accept="application/json" hidden />
+              <button type="button" id="export-btn" class="btn-ghost">↑ Exportar</button>
+              <label class="btn-ghost file-label">
+                ↓ Importar
+                <input type="file" id="import-file" accept="application/json" hidden />
+              </label>
             </div>
           </div>
 
-          <div class="table-scroll">
-            <table id="rules-table">
-              <thead>
-                <tr>
-                  <th>Nome</th>
-                  <th>Padrão</th>
-                  <th>Tipo</th>
-                  <th>Cor</th>
-                  <th>Prioridade</th>
-                  <th>Habilitada</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody id="rules-tbody"></tbody>
-            </table>
+          <div class="rules-scroll">
+            <div id="rules-columns" class="rule-row rule-row-header" hidden>
+              <span>Nome</span>
+              <span>Padrão de URL</span>
+              <span>Tipo</span>
+              <span>Cor</span>
+              <span>Pri.</span>
+              <span>Ativa</span>
+              <span>Ordem</span>
+              <span>Ações</span>
+            </div>
+
+            <div id="rules-list"></div>
+          </div>
+
+          <div id="rules-empty" class="empty-state" hidden>
+            <div class="empty-icon">📋</div>
+            <p class="empty-title">Nenhuma regra cadastrada ainda</p>
+            <p class="empty-text">Use o formulário ao lado para adicionar sua primeira regra de destaque.</p>
           </div>
         </section>
 
         <aside class="panel form-panel">
-          <h2 id="form-title">Nova regra</h2>
+          <div class="form-header">
+            <h2 id="form-title">Nova regra</h2>
+            <p id="form-subtitle" class="form-subtitle">Preencha os campos para adicionar uma regra</p>
+          </div>
+
+          <div id="form-alerts" class="form-alerts">
+            <div id="form-error" class="alert alert-error" hidden></div>
+            <div id="form-warning" class="alert alert-warning" hidden></div>
+          </div>
+
           <form id="rule-form">
-            <div id="form-error" class="message error" hidden></div>
-            <div id="form-warning" class="message warning" hidden></div>
+            <div class="field">
+              <label class="field-label" for="field-name">Nome <span class="required">*</span></label>
+              <input type="text" id="field-name" placeholder="Ex: Staging" required />
+            </div>
 
-            <label>
-              Nome
-              <input type="text" id="field-name" required />
-            </label>
+            <div class="field">
+              <label class="field-label" for="field-url-pattern">
+                Padrão de URL <span class="required">*</span>
+                <span class="field-hint">— suporta glob: * e ?</span>
+              </label>
+              <input
+                type="text"
+                id="field-url-pattern"
+                class="mono"
+                placeholder="*://staging.*.example.com/*"
+                required
+              />
+            </div>
 
-            <label>
-              Padrão de URL (glob)
-              <input type="text" id="field-url-pattern" required placeholder="*://staging.*.example.com/*" />
-            </label>
-
-            <label>
-              Tipo de destaque
+            <div class="field">
+              <label class="field-label" for="field-type">Tipo de destaque</label>
               <select id="field-type">
                 <option value="bar">Barra</option>
                 <option value="border">Borda</option>
                 <option value="widget">Widget</option>
                 <option value="modal">Modal</option>
               </select>
-            </label>
+            </div>
 
-            <label>
-              Cor
-              <input type="color" id="field-color" value="#e53e3e" />
-            </label>
+            <div class="field">
+              <label class="field-label">Cor</label>
+              <div class="color-field">
+                <div class="color-swatch-picker">
+                  <input type="color" id="field-color" value="#3b82f6" />
+                </div>
+                <input type="text" id="field-color-hex" class="mono" maxlength="7" value="#3b82f6" />
+              </div>
+            </div>
 
-            <label id="field-message-label">
-              Mensagem
-              <textarea id="field-message"></textarea>
-            </label>
+            <div class="field" id="field-message-group">
+              <label class="field-label" for="field-message">Mensagem</label>
+              <textarea id="field-message" rows="2" placeholder="Mensagem exibida ao usuário..."></textarea>
+            </div>
 
-            <label id="field-icon-label">
-              Ícone
+            <div class="field" id="field-icon-group">
+              <label class="field-label" for="field-icon">Ícone</label>
               <select id="field-icon">
-                <option value="">Nenhum</option>
-                <option value="alerta">Alerta</option>
-                <option value="informacao">Informação</option>
-                <option value="nota">Nota</option>
-                <option value="perigo">Perigo</option>
-                <option value="sucesso">Sucesso</option>
+                <option value="">— Nenhum</option>
+                <option value="alerta">⚠️ Alerta</option>
+                <option value="informacao">ℹ️ Informação</option>
+                <option value="nota">📝 Nota</option>
+                <option value="perigo">🚫 Perigo</option>
+                <option value="sucesso">✅ Sucesso</option>
               </select>
-            </label>
+            </div>
 
-            <label id="field-position-label">
-              Posição
-              <select id="field-position">
-                <option value="top">Topo</option>
-                <option value="bottom">Rodapé</option>
-              </select>
-            </label>
+            <div class="field" id="field-position-group">
+              <label class="field-label">Posição</label>
+              <div class="segmented" id="field-position">
+                <button type="button" class="segmented-option" data-value="top">Topo</button>
+                <button type="button" class="segmented-option" data-value="bottom">Rodapé</button>
+              </div>
+            </div>
 
-            <label id="field-dismissible-label">
+            <label class="checkbox-field" id="field-dismissible-group">
               <input type="checkbox" id="field-dismissible" checked />
               Permite fechar
             </label>
 
-            <label>
+            <label class="checkbox-field">
               <input type="checkbox" id="field-enabled" checked />
               Habilitada
             </label>
 
             <div class="form-actions">
-              <button type="submit" id="form-submit" class="btn btn-primary">Salvar</button>
-              <button type="button" id="form-cancel" class="btn btn-secondary" hidden>Cancelar edição</button>
+              <button type="submit" id="form-submit" class="btn-primary">Salvar</button>
+              <button type="button" id="form-cancel" class="btn-ghost" hidden>Cancelar</button>
             </div>
           </form>
         </aside>
       </div>
     </div>
+
+    <div id="delete-modal" class="modal-overlay" hidden>
+      <div class="modal-dialog">
+        <div class="modal-body">
+          <div class="modal-icon">✕</div>
+          <div>
+            <h3>Excluir regra</h3>
+            <p id="delete-modal-text"></p>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" id="delete-cancel" class="btn-ghost">Cancelar</button>
+          <button type="button" id="delete-confirm" class="btn-danger">Excluir</button>
+        </div>
+      </div>
+    </div>
+
     <script src="options.js"></script>
   </body>
 </html>
