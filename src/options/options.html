@@ -2,10 +2,104 @@
 <html lang="pt-BR">
   <head>
     <meta charset="utf-8" />
+    <title>URL Highlighter — Opções</title>
     <link rel="stylesheet" href="options.css" />
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <h1>URL Highlighter</h1>
+
+      <section>
+        <h2 id="form-title">Nova regra</h2>
+        <form id="rule-form">
+          <div id="form-error" class="message error" hidden></div>
+          <div id="form-warning" class="message warning" hidden></div>
+
+          <label>
+            Nome
+            <input type="text" id="field-name" required />
+          </label>
+
+          <label>
+            Padrão de URL (glob)
+            <input type="text" id="field-url-pattern" required placeholder="*://staging.*.example.com/*" />
+          </label>
+
+          <label>
+            Tipo de destaque
+            <select id="field-type">
+              <option value="bar">Barra</option>
+              <option value="border">Borda</option>
+              <option value="widget">Widget</option>
+              <option value="modal">Modal</option>
+            </select>
+          </label>
+
+          <label>
+            Cor
+            <input type="color" id="field-color" value="#e53e3e" />
+          </label>
+
+          <label id="field-message-label">
+            Mensagem
+            <textarea id="field-message"></textarea>
+          </label>
+
+          <label id="field-icon-label">
+            Ícone
+            <select id="field-icon">
+              <option value="">Nenhum</option>
+              <option value="alerta">Alerta</option>
+              <option value="informacao">Informação</option>
+              <option value="nota">Nota</option>
+              <option value="perigo">Perigo</option>
+              <option value="sucesso">Sucesso</option>
+            </select>
+          </label>
+
+          <label id="field-position-label">
+            Posição
+            <select id="field-position">
+              <option value="top">Topo</option>
+              <option value="bottom">Rodapé</option>
+            </select>
+          </label>
+
+          <label id="field-dismissible-label">
+            <input type="checkbox" id="field-dismissible" checked />
+            Permite fechar
+          </label>
+
+          <label>
+            <input type="checkbox" id="field-enabled" checked />
+            Habilitada
+          </label>
+
+          <div class="form-actions">
+            <button type="submit" id="form-submit">Salvar</button>
+            <button type="button" id="form-cancel" hidden>Cancelar edição</button>
+          </div>
+        </form>
+      </section>
+
+      <section>
+        <h2>Regras</h2>
+        <table id="rules-table">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Padrão</th>
+              <th>Tipo</th>
+              <th>Cor</th>
+              <th>Prioridade</th>
+              <th>Habilitada</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="rules-tbody"></tbody>
+        </table>
+      </section>
+    </div>
     <script src="options.js"></script>
   </body>
 </html>
