@@ -20,6 +20,6 @@
     "@types/webextension-polyfill": "^0.12.1",
     "esbuild": "^0.25.0",
     "typescript": "^5.5.4",
-    "vitest": "^2.1.9"
+    "vitest": "^3.2.7"
   }
 }
