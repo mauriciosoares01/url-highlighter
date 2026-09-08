@@ -25,56 +25,62 @@ export function renderWidget(
   badge.style.pointerEvents = 'auto';
   badge.style.background = color;
   badge.style.color = '#fff';
-  badge.style.borderRadius = '8px';
+  badge.style.borderRadius = '13px';
   badge.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
   badge.style.font = '14px/1.4 system-ui, sans-serif';
   badge.style.cursor = 'pointer';
-  badge.style.padding = '10px 14px';
+  badge.style.padding = '16px 22px';
   badge.style.maxWidth = '280px';
 
-  const summary = document.createElement('div');
-  summary.style.fontWeight = 'bold';
-  summary.style.display = 'flex';
-  summary.style.alignItems = 'center';
-  summary.style.gap = '6px';
-  if (icon) {
-    summary.appendChild(createIconImg(icon));
-  }
-  summary.appendChild(document.createTextNode(icon ? '' : '⚠'));
+  const row = document.createElement('div');
+  row.style.display = 'flex';
+  row.style.alignItems = 'center';
+  row.style.justifyContent = 'center';
+  row.style.gap = '10px';
 
-  const full = document.createElement('div');
-  full.textContent = message ?? '';
-  full.style.marginTop = '8px';
-  full.style.display = 'none';
+  const iconEl = icon
+    ? createIconImg(icon, 26)
+    : document.createTextNode('⚠');
+  const iconWrapper = document.createElement('span');
+  iconWrapper.style.display = 'flex';
+  iconWrapper.style.alignItems = 'center';
+  iconWrapper.style.fontSize = '22px';
+  iconWrapper.style.flexShrink = '0';
+  iconWrapper.appendChild(iconEl);
+
+  const messageEl = document.createElement('span');
+  messageEl.textContent = message ?? '';
+  messageEl.style.display = 'none';
+  messageEl.style.flex = '1 1 auto';
+  messageEl.style.minWidth = '0';
+  messageEl.style.textAlign = 'left';
 
   const closeButton = dismissible ? document.createElement('button') : null;
   if (closeButton) {
     closeButton.textContent = '×';
-    closeButton.style.position = 'absolute';
-    closeButton.style.top = '4px';
-    closeButton.style.right = '6px';
     closeButton.style.background = 'transparent';
     closeButton.style.border = 'none';
     closeButton.style.color = '#fff';
     closeButton.style.cursor = 'pointer';
-    closeButton.style.font = '16px/1 system-ui, sans-serif';
+    closeButton.style.font = '18px/1 system-ui, sans-serif';
+    closeButton.style.padding = '0';
+    closeButton.style.flexShrink = '0';
     closeButton.style.display = 'none';
   }
 
-  const wrapper = document.createElement('div');
-  wrapper.style.position = 'relative';
-  wrapper.appendChild(summary);
-  wrapper.appendChild(full);
+  row.appendChild(iconWrapper);
+  row.appendChild(messageEl);
   if (closeButton) {
-    wrapper.appendChild(closeButton);
+    row.appendChild(closeButton);
   }
-  badge.appendChild(wrapper);
+  badge.appendChild(row);
 
   badge.addEventListener('click', () => {
     expanded = !expanded;
-    full.style.display = expanded ? 'block' : 'none';
+    row.style.justifyContent = expanded ? 'flex-start' : 'center';
+    messageEl.style.display = expanded ? 'inline' : 'none';
     if (closeButton) {
-      closeButton.style.display = expanded ? 'block' : 'none';
+      closeButton.style.display = expanded ? 'inline-flex' : 'none';
     }
   });
 

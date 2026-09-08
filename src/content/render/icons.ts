@@ -13,11 +13,11 @@ export function iconUrl(icon: HighlightIcon): string {
   return browser.runtime.getURL(ICON_FILES[icon]);
 }
 
-export function createIconImg(icon: HighlightIcon): HTMLImageElement {
+export function createIconImg(icon: HighlightIcon, size = 16): HTMLImageElement {
   const img = document.createElement('img');
   img.src = iconUrl(icon);
-  img.width = 16;
-  img.height = 16;
+  img.width = size;
+  img.height = size;
   img.alt = '';
   return img;
 }
