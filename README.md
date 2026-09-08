@@ -2,6 +2,8 @@
 
 Extensão de navegador (Chrome + Firefox, Manifest V3) que destaca visualmente uma página com base em regras configuráveis de match contra a URL — útil para distinguir staging de produção, sinalizar painéis administrativos ou qualquer ambiente sensível, sem depender de o usuário conferir a URL manualmente.
 
+> Documentação técnica (arquitetura, modelo de dados, build): [ARCHITECTURE.md](ARCHITECTURE.md).
+
 ## Instalação
 
 ### Chrome
@@ -38,4 +40,8 @@ A extensão não sincroniza regras automaticamente entre pessoas ou navegadores 
 ## Distribuição
 
 Decisão adotada para esta primeira versão: **distribuição interna via arquivo compartilhado** (`.zip` do Chrome / `.zip` ou `.xpi` do Firefox), não publicação nas lojas oficiais (Chrome Web Store / AMO). Publicação em loja fica em aberto como decisão administrativa futura, caso o uso extrapole o time.
+
+## Licença
+
+[MIT](LICENSE).
 

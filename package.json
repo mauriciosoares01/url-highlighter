@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "Extensão de navegador (Chrome + Firefox) que destaca visualmente uma página com base em regras configuráveis de match contra a URL.",
+  "license": "MIT",
   "engines": {
     "node": ">=18"
   },
