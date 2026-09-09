@@ -1,5 +1,7 @@
 # URL Highlighter
 
+![URL Highlighter](assets/banner.png)
+
 Extensão de navegador (Chrome + Firefox, Manifest V3) que destaca visualmente uma página com base em regras configuráveis de match contra a URL — útil para distinguir staging de produção, sinalizar painéis administrativos ou qualquer ambiente sensível, sem depender de o usuário conferir a URL manualmente.
 
 > Documentação técnica (arquitetura, modelo de dados, build): [ARCHITECTURE.md](ARCHITECTURE.md). Política de privacidade: [PRIVACY.md](PRIVACY.md).
