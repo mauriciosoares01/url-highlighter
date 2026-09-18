@@ -8,6 +8,13 @@ Extensão de navegador (Chrome + Firefox, Manifest V3) que destaca visualmente u
 
 ## Instalação
 
+As versões de produção estão disponíveis nas lojas oficiais:
+
+- [Instalar no Chrome Web Store](https://chromewebstore.google.com/detail/url-highlighter/pfcopkgmjcbopagodognkeihfdiokcfn?authuser=0&hl=pt-BR&pli=1)
+- [Instalar nos Complementos do Firefox](https://addons.mozilla.org/pt-BR/firefox/addon/url-page-highlighter/)
+
+### Instalação manual (desenvolvimento)
+
 ### Chrome
 
 1. Baixe `url-highlighter-chrome-1.0.0.zip` e extraia numa pasta.
@@ -20,7 +27,17 @@ Extensão de navegador (Chrome + Firefox, Manifest V3) que destaca visualmente u
 2. Acesse `about:debugging#/runtime/this-firefox`.
 3. Clique em "Carregar extensão temporária" e selecione o `manifest.json` dentro da pasta extraída.
 
-> Instalação temporária: a extensão some do Firefox ao fechar o navegador e precisa ser recarregada. Para instalação permanente sem passar pela AMO (Mozilla), é necessário assinar o pacote — fora do escopo desta primeira versão (ver "Distribuição" abaixo).
+> Instalação temporária: a extensão some do Firefox ao fechar o navegador e precisa ser recarregada. Para instalação permanente, prefira a versão publicada nos [Complementos do Firefox](https://addons.mozilla.org/pt-BR/firefox/addon/url-page-highlighter/).
+
+## Build a partir do código-fonte
+
+Requisitos: Node.js >= 18.
+
+1. `npm install`
+2. `npm run build:chrome` (ou `npm run build:firefox`, ou `npm run build` para gerar os dois de uma vez)
+3. O pacote gerado fica em `dist/chrome/` ou `dist/firefox/` (`manifest.json` + os arquivos JS).
+
+O `esbuild` (`bundle: true`, sem `minify`) apenas concatena os módulos TypeScript de `src/` em um arquivo por entry point (`background.js`, `content-script.js`, `popup.js`, `options.js`) — não ofusca nem gera código diferente do fonte, só combina os módulos importados em cada um. O `manifest.json` final é gerado a partir de `manifest.template.json` + `scripts/build.mjs`, que injeta as chaves específicas de cada browser. Detalhes do processo em [ARCHITECTURE.md, §12](ARCHITECTURE.md#12-build-e-compatibilidade-cross-browser).
 
 ## Cadastrando a primeira regra
 
@@ -41,9 +58,8 @@ A extensão não sincroniza regras automaticamente entre pessoas ou navegadores 
 
 ## Distribuição
 
-Decisão adotada para esta primeira versão: **distribuição interna via arquivo compartilhado** (`.zip` do Chrome / `.zip` ou `.xpi` do Firefox), não publicação nas lojas oficiais (Chrome Web Store / AMO). Publicação em loja fica em aberto como decisão administrativa futura, caso o uso extrapole o time.
+A extensão é distribuída publicamente pelas lojas oficiais: [Chrome Web Store](https://chromewebstore.google.com/detail/url-highlighter/pfcopkgmjcbopagodognkeihfdiokcfn?authuser=0&hl=pt-BR&pli=1) e [Complementos do Firefox (AMO)](https://addons.mozilla.org/pt-BR/firefox/addon/url-page-highlighter/). Os pacotes locais continuam úteis para desenvolvimento e testes manuais.
 
 ## Licença
 
 [MIT](LICENSE).
-
